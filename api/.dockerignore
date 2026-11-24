@@ -20,3 +20,7 @@ docs
 .phpunit.cache
 .idea
 .vscode
+
+# Scribe is a dev-only tool; its config references its classes.
+config/scribe.php
+.scribe
