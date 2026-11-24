@@ -1,0 +1,618 @@
+openapi: 3.0.3
+info:
+  title: 'TeamBoard API'
+  description: 'REST API for TeamBoard: boards, lists, cards, comments, invitations and notifications. Real-time updates are pushed over Laravel Reverb.'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost:8002'
+tags:
+  -
+    name: Authentication
+    description: "\nToken-based auth (Laravel Sanctum). Send the token as `Authorization: Bearer <token>`."
+  -
+    name: Boards
+    description: ''
+  -
+    name: Cards
+    description: ''
+  -
+    name: Columns
+    description: ''
+  -
+    name: Comments
+    description: ''
+  -
+    name: Endpoints
+    description: ''
+  -
+    name: 'Members & invitations'
+    description: ''
+  -
+    name: Notifications
+    description: "\nNew notifications are also pushed live on the private channel `App.Models.User.{id}`."
+components:
+  securitySchemes:
+    default:
+      type: http
+      scheme: bearer
+      description: 'Get a token from <code>POST /api/v1/auth/login</code> (or register) and send it as <code>Authorization: Bearer {token}</code>.'
+security:
+  -
+    default: []
+paths:
+  /api/v1/auth/register:
+    post:
+      summary: Register
+      operationId: register
+      description: 'Creates an account and returns an API token.'
+      parameters: []
+      responses: {  }
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: vmqeopfuudtdsufvyvddq
+                email:
+                  type: string
+                  description: 'Must be a valid email address. Must not be greater than 255 characters.'
+                  example: kunde.eloisa@example.com
+                password:
+                  type: string
+                  description: ''
+                  example: consequatur
+                device_name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: mqeopfuudtdsufvyvddqa
+                  nullable: true
+              required:
+                - name
+                - email
+                - password
+      security: []
+  /api/v1/auth/login:
+    post:
+      summary: 'Log in'
+      operationId: logIn
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Must be a valid email address.'
+                  example: qkunze@example.com
+                password:
+                  type: string
+                  description: ''
+                  example: 'O[2UZ5ij-e/dl4m{o,'
+                device_name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: dqamniihfqcoynlazghdt
+                  nullable: true
+              required:
+                - email
+                - password
+      security: []
+  /api/v1/auth/me:
+    get:
+      summary: 'Current user'
+      operationId: currentUser
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - Authentication
+  /api/v1/auth/logout:
+    post:
+      summary: 'Log out (revokes the current token)'
+      operationId: logOutrevokesTheCurrentToken
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Authentication
+  /api/v1/boards:
+    get:
+      summary: 'List my boards'
+      operationId: listMyBoards
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - Boards
+    post:
+      summary: 'Create a board'
+      operationId: createABoard
+      description: 'The board starts with four columns: To do, In progress, Review, Done.'
+      parameters: []
+      responses: {  }
+      tags:
+        - Boards
+  '/api/v1/boards/{id}':
+    get:
+      summary: 'Get a board with its columns, cards and members'
+      operationId: getABoardWithItsColumnsCardsAndMembers
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - Boards
+    put:
+      summary: 'Update a board (owner only)'
+      operationId: updateABoardownerOnly
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Boards
+    delete:
+      summary: 'Delete a board (owner only)'
+      operationId: deleteABoardownerOnly
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Boards
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the board.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/boards/{board_id}/activity':
+    get:
+      summary: 'Recent activity on a board'
+      operationId: recentActivityOnABoard
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - Boards
+    parameters:
+      -
+        in: path
+        name: board_id
+        description: 'The ID of the board.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/columns/{column_id}/cards':
+    post:
+      summary: 'Create a card at the bottom of a column'
+      operationId: createACardAtTheBottomOfAColumn
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Cards
+    parameters:
+      -
+        in: path
+        name: column_id
+        description: 'The ID of the column.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/cards/{card_id}':
+    get:
+      summary: 'Get a card with its comments'
+      operationId: getACardWithItsComments
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - Cards
+    patch:
+      summary: "Update a card's details"
+      operationId: updateACardsDetails
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Cards
+    delete:
+      summary: 'Delete a card'
+      operationId: deleteACard
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Cards
+    parameters:
+      -
+        in: path
+        name: card_id
+        description: 'The ID of the card.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/cards/{card_id}/move':
+    patch:
+      summary: 'Move a card'
+      operationId: moveACard
+      description: "Moves the card to `column_id` at `position` (0 = top). Positions of the\nother cards are adjusted. The response has the new order of every\ncolumn that changed."
+      parameters: []
+      responses: {  }
+      tags:
+        - Cards
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                column_id:
+                  type: integer
+                  description: ''
+                  example: 17
+                position:
+                  type: integer
+                  description: 'Must be at least 0.'
+                  example: 45
+              required:
+                - column_id
+                - position
+    parameters:
+      -
+        in: path
+        name: card_id
+        description: 'The ID of the card.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/boards/{board_id}/columns':
+    post:
+      summary: 'Add a column (at the end)'
+      operationId: addAColumnatTheEnd
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Columns
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 60 characters.'
+                  example: vmqeopfuudtdsufvyvddq
+              required:
+                - name
+    parameters:
+      -
+        in: path
+        name: board_id
+        description: 'The ID of the board.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/boards/{board_id}/columns/order':
+    put:
+      summary: 'Reorder columns'
+      operationId: reorderColumns
+      description: 'Send every column id of the board in the new order.'
+      parameters: []
+      responses: {  }
+      tags:
+        - Columns
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                order:
+                  type: array
+                  description: ''
+                  example:
+                    - 17
+                  items:
+                    type: integer
+    parameters:
+      -
+        in: path
+        name: board_id
+        description: 'The ID of the board.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/columns/{column_id}':
+    patch:
+      summary: 'Rename a column'
+      operationId: renameAColumn
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Columns
+    delete:
+      summary: 'Delete a column and its cards'
+      operationId: deleteAColumnAndItsCards
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Columns
+    parameters:
+      -
+        in: path
+        name: column_id
+        description: 'The ID of the column.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/cards/{card_id}/comments':
+    post:
+      summary: 'Comment on a card'
+      operationId: commentOnACard
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Comments
+    parameters:
+      -
+        in: path
+        name: card_id
+        description: 'The ID of the card.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/comments/{comment_id}':
+    delete:
+      summary: 'Delete your own comment'
+      operationId: deleteYourOwnComment
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Comments
+    parameters:
+      -
+        in: path
+        name: comment_id
+        description: 'The ID of the comment.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/broadcasting/auth:
+    get:
+      summary: 'Authenticate the request for channel access.'
+      operationId: authenticateTheRequestForChannelAccess
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - Endpoints
+  '/api/v1/invitations/{token}':
+    get:
+      summary: 'Look up an invitation'
+      operationId: lookUpAnInvitation
+      description: 'Used by the "accept invitation" page before the user signs in.'
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'This invitation is invalid or has expired.'
+                properties:
+                  message:
+                    type: string
+                    example: 'This invitation is invalid or has expired.'
+      tags:
+        - 'Members & invitations'
+      security: []
+    parameters:
+      -
+        in: path
+        name: token
+        description: ''
+        example: consequatur
+        required: true
+        schema:
+          type: string
+  '/api/v1/boards/{board_id}/invitations':
+    post:
+      summary: 'Invite someone by email (owner only)'
+      operationId: inviteSomeoneByEmailownerOnly
+      description: 'Sends an email with a link that is valid for 7 days.'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Members & invitations'
+    parameters:
+      -
+        in: path
+        name: board_id
+        description: 'The ID of the board.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/invitations/{token}/accept':
+    post:
+      summary: 'Accept an invitation'
+      operationId: acceptAnInvitation
+      description: 'The signed-in user must have the email address the invitation was sent to.'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Members & invitations'
+    parameters:
+      -
+        in: path
+        name: token
+        description: ''
+        example: 17
+        required: true
+        schema:
+          type: integer
+  '/api/v1/boards/{board_id}/members/{user_id}':
+    delete:
+      summary: 'Remove a member, or leave the board yourself'
+      operationId: removeAMemberOrLeaveTheBoardYourself
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Members & invitations'
+    parameters:
+      -
+        in: path
+        name: board_id
+        description: 'The ID of the board.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: user_id
+        description: 'The ID of the user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/notifications:
+    get:
+      summary: 'List my latest notifications'
+      operationId: listMyLatestNotifications
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - Notifications
+  /api/v1/notifications/read-all:
+    post:
+      summary: 'Mark all as read'
+      operationId: markAllAsRead
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Notifications

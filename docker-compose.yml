@@ -1,0 +1,120 @@
+# Local development:   docker compose up -d            -> PostgreSQL + Redis
+# Whole app in Docker: docker compose --profile app up -d --build
+#                      -> SPA http://localhost:5180, API http://localhost:8002
+
+x-api-env: &api-env
+  APP_ENV: ${APP_ENV:-production}
+  APP_DEBUG: ${APP_DEBUG:-false}
+  APP_URL: http://localhost:8002
+  FRONTEND_URL: http://localhost:5180
+  DB_CONNECTION: pgsql
+  DB_HOST: pgsql
+  DB_PORT: 5432
+  REDIS_HOST: redis
+  QUEUE_CONNECTION: redis
+  CACHE_STORE: redis
+  BROADCAST_CONNECTION: reverb
+  REVERB_HOST: reverb
+  REVERB_PORT: 8080
+  REVERB_SCHEME: http
+  LOG_CHANNEL: stderr
+
+services:
+  pgsql:
+    image: postgres:17-alpine
+    container_name: teamboard_db
+    restart: unless-stopped
+    ports:
+      - "${FORWARD_DB_PORT:-5434}:5432"
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-teamboard}
+      POSTGRES_USER: ${DB_USERNAME:-teamboard}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-teamboard} -d ${DB_DATABASE:-teamboard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: teamboard_redis
+    restart: unless-stopped
+    ports:
+      - "${FORWARD_REDIS_PORT:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Catches outgoing mail (invitations, reminders): http://localhost:8026
+  mailpit:
+    image: axllent/mailpit:v1.21
+    container_name: teamboard_mail
+    restart: unless-stopped
+    ports:
+      - "${FORWARD_MAILPIT_PORT:-1026}:1025"
+      - "${FORWARD_MAILPIT_UI_PORT:-8026}:8025"
+
+  api:
+    profiles: [app]
+    build: { context: ./api, dockerfile: ../docker/api.Dockerfile, target: app, additional_contexts: { dockerfiles: ./docker } }
+    image: teamboard-api
+    env_file: ./api/.env
+    environment:
+      <<: *api-env
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+    depends_on:
+      pgsql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  api-web:
+    profiles: [app]
+    build: { context: ./api, dockerfile: ../docker/api.Dockerfile, target: web, additional_contexts: { dockerfiles: ./docker } }
+    ports:
+      - "8002:80"
+    depends_on: [api]
+
+  queue:
+    profiles: [app]
+    image: teamboard-api
+    command: ["php", "artisan", "queue:work", "--tries=3"]
+    env_file: ./api/.env
+    environment: *api-env
+    depends_on: [api]
+
+  scheduler:
+    profiles: [app]
+    image: teamboard-api
+    command: ["php", "artisan", "schedule:work"]
+    env_file: ./api/.env
+    environment: *api-env
+    depends_on: [api]
+
+  reverb:
+    profiles: [app]
+    image: teamboard-api
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    env_file: ./api/.env
+    environment: *api-env
+    ports:
+      - "8085:8080"
+    depends_on: [api]
+
+  web:
+    profiles: [app]
+    build:
+      context: ./web
+      dockerfile: ../docker/web.Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8002
+        VITE_REVERB_HOST: localhost
+        VITE_REVERB_PORT: 8085
+    ports:
+      - "5180:80"
+
+volumes:
+  pgdata:
