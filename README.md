@@ -61,7 +61,7 @@ Teams create boards with lists and cards, drag cards between lists, assign them,
 | API | Laravel 12, Sanctum (tokens), Reverb (WebSockets), queues, scheduler, notifications, Scribe |
 | SPA | Vue 3 + TypeScript, Vite, Vue Router, Pinia, Laravel Echo, vuedraggable (SortableJS), Tailwind CSS |
 | Data | PostgreSQL 17, Redis 7 |
-| Quality | Pest (29 tests), Pint, `vue-tsc` type-checking |
+| Quality | Pest (35 tests), Pint, `vue-tsc` type-checking |
 | DevOps | Docker Compose (API, Nginx, queue, scheduler, Reverb, SPA), GitHub Actions (tests on SQLite **and** PostgreSQL + SPA build) |
 
 ## API at a glance
